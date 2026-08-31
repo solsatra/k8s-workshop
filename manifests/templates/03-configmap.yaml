@@ -1,0 +1,10 @@
+# Exercise 3 — pull game settings out of the image and into config.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: snake-config
+  namespace: <player>   # TODO
+data:
+  GRID_SIZE: "<TODO-e.g.-20>"
+  TICK_MS: "<TODO-e.g.-120>"
+  PLAYER_NAME: "<TODO-your-name>"

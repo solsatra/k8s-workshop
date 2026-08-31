@@ -1,0 +1,36 @@
+# CHAOS ROUND — answer key (facilitator only, don't show this file):
+# Bug: image tag doesn't exist. Symptom: `kubectl get pods` shows
+# ImagePullBackOff / ErrImagePull. Fix: `kubectl describe pod` shows the
+# pull error and the bad tag; correct the tag back to what the facilitator
+# actually pushed and re-apply (or `kubectl set image`).
+#
+# Applied over the player's existing snake-core Deployment — same name, same
+# namespace, so `kubectl apply -n <ns> -f bad-image-tag.yaml` overwrites the
+# image field in place.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snake-core
+  template:
+    metadata:
+      labels:
+        app: snake-core
+    spec:
+      containers:
+        - name: snake-core
+          image: <registry>/snake-core:does-not-exist
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080

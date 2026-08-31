@@ -1,0 +1,25 @@
+# Exercise 4 — a Service with no selector, backed by a manually-declared
+# Endpoints object instead of pods. This is how you give an external
+# backend — here, the Postgres VM your facilitator stood up — a normal
+# in-cluster DNS name (db-external) so leaderboard-api never needs to know
+# a raw IP. Same Service abstraction either way.
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-external
+  namespace: <player>   # TODO
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: db-external   # must match the Service name above
+  namespace: <player>   # TODO
+subsets:
+  - addresses:
+      - ip: <TODO-scoreboard-VM-LB-IP-from-facilitator>
+    ports:
+      - port: 5432

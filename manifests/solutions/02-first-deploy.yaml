@@ -1,0 +1,73 @@
+# Reference answer for exercise 2 — facilitator eyes only, don't hand out.
+# Example values use namespace "alice" and a placeholder registry; swap for
+# your actual values.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-core
+  namespace: alice
+  labels:
+    app: snake-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snake-core
+  template:
+    metadata:
+      labels:
+        app: snake-core
+    spec:
+      containers:
+        - name: snake-core
+          image: registry.workshop.local/snake-core:1.0
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake-core
+  namespace: alice
+spec:
+  type: ClusterIP
+  selector:
+    app: snake-core
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: snake-core
+  namespace: alice
+spec:
+  rules:
+    - host: alice-snake.workshop.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: snake-core
+                port:
+                  number: 80

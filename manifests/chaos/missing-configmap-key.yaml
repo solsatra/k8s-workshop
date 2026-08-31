@@ -1,0 +1,37 @@
+# CHAOS ROUND — answer key (facilitator only, don't show this file):
+# Bug: envFrom references a ConfigMap that doesn't exist. Symptom: pod
+# stuck in CreateContainerConfigError; `kubectl describe pod` names the
+# missing ConfigMap directly. Fix: correct the name back to `snake-config`
+# and re-apply.
+#
+# Applied over the player's existing snake-core Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snake-core
+  template:
+    metadata:
+      labels:
+        app: snake-core
+    spec:
+      containers:
+        - name: snake-core
+          image: <registry>/snake-core:1.0
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: snake-config-typo
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080

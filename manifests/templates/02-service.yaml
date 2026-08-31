@@ -1,0 +1,14 @@
+# Exercise 2 — the entrypoint. This Service is how anything (including the
+# Ingress below) finds your pods: by matching labels, not by pod name/IP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake-core
+  namespace: <player>   # TODO
+spec:
+  type: ClusterIP
+  selector:
+    app: <TODO>          # TODO: must match the Pod labels in 02-deployment.yaml
+  ports:
+    - port: 80
+      targetPort: <TODO>  # TODO: must match containerPort in 02-deployment.yaml

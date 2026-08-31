@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Snake Leaderboard</title>
+<style>
+  body { background:#0b1220; color:#e2e8f0; font-family: system-ui, sans-serif; margin:0; padding:3rem; }
+  h1 { font-size: 2.5rem; margin-bottom: 2rem; }
+  .row { display:flex; justify-content:space-between; font-size:2rem; padding:0.5rem 0; border-bottom:1px solid #334155; }
+  .row:nth-child(1) { color:#fbbf24; font-size:2.6rem; }
+  #status { color:#94a3b8; margin-top:2rem; font-size:1rem; }
+</style>
+</head>
+<body>
+  <h1>🐍 Leaderboard</h1>
+  <div id="rows">Loading…</div>
+  <div id="status"></div>
+  <script>
+    // Point this at any one player's leaderboard-api — since everyone
+    // shares the same scoreboard DB, any single instance already returns
+    // the combined leaderboard across the whole room.
+    const API_URL = new URLSearchParams(location.search).get('api') || 'http://CHANGE-ME:8080';
+
+    async function refresh() {
+      const status = document.getElementById('status');
+      const rows = document.getElementById('rows');
+      try {
+        const res = await fetch(`${API_URL}/scores/top?limit=15`);
+        const data = await res.json();
+        rows.innerHTML = (data.scores || [])
+          .map((s, i) => `<div class="row"><span>${i + 1}. ${s.player}</span><span>${s.best}</span></div>`)
+          .join('') || '<p>No scores yet.</p>';
+        status.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        status.textContent = `Couldn't reach ${API_URL} — ${err.message}`;
+      }
+    }
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>

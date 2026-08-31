@@ -1,0 +1,17 @@
+{
+  "name": "leaderboard-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reads/writes scores on the shared All-Apps VM database. The component players deliberately kill for the fault-isolation demo.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
+  }
+}

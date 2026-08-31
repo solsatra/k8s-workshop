@@ -1,0 +1,75 @@
+# Reference answer for exercise 4 — facilitator eyes only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leaderboard-api
+  namespace: alice
+  labels:
+    app: leaderboard-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leaderboard-api
+  template:
+    metadata:
+      labels:
+        app: leaderboard-api
+    spec:
+      containers:
+        - name: leaderboard-api
+          image: registry.workshop.local/leaderboard-api:1.0
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leaderboard-api
+  namespace: alice
+spec:
+  type: ClusterIP
+  selector:
+    app: leaderboard-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-external
+  namespace: alice
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: db-external
+  namespace: alice
+subsets:
+  - addresses:
+      - ip: 10.20.30.40   # the scoreboard VM's VirtualMachineService EXTERNAL-IP
+    ports:
+      - port: 5432
+---
+# Patch on snake-core's ConfigMap/Deployment to point it at leaderboard-api:
+#
+# data:
+#   LEADERBOARD_API_URL: "http://leaderboard-api:8080"

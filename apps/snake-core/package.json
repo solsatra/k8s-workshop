@@ -1,0 +1,17 @@
+{
+  "name": "snake-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Snake game frontend + thin server. The must-stay-up component.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1"
+  }
+}

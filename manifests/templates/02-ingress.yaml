@@ -1,0 +1,24 @@
+# Exercise 2 — expose the Service to your browser.
+#
+# If your Supervisor cluster has an ingress controller (e.g. NSX ALB/AKO),
+# use the Ingress below. If not, ask your facilitator whether to instead
+# change 02-service.yaml's spec.type to LoadBalancer and skip this file —
+# Supervisor's native NSX ALB integration will hand you an external IP
+# directly on the Service.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: snake-core
+  namespace: <player>   # TODO
+spec:
+  rules:
+    - host: <TODO-e.g.-alice-snake.workshop.local>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: snake-core
+                port:
+                  number: 80

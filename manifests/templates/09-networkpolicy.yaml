@@ -1,0 +1,22 @@
+# Exercise 9 — only snake-core should be able to reach leaderboard-api.
+# Without this, anything else in your namespace (or, depending on your
+# Supervisor's default network policy, other namespaces) can hit it too.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: leaderboard-api-restrict
+  namespace: <player>   # TODO
+spec:
+  podSelector:
+    matchLabels:
+      app: <TODO-leaderboard-api-pod-label>
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: <TODO-snake-core-pod-label>
+      ports:
+        - protocol: TCP
+          port: <TODO-leaderboard-api-container-port>

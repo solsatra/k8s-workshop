@@ -1,0 +1,80 @@
+# The "All Apps" piece: a VM provisioned through vSphere Supervisor's VM
+# Service, sitting in its own namespace, running Postgres for the shared
+# leaderboard. Fronted by a VirtualMachineService (type LoadBalancer) so it
+# gets a stable IP reachable from every player namespace regardless of
+# per-namespace NSX network segmentation — the same Service abstraction
+# Kubernetes uses for Pods, applied to a VM.
+#
+# NOTE: the vmoperator.vmware.com API version/field names can differ across
+# VCF releases — check `kubectl api-resources | grep vmoperator` and your
+# environment's available VirtualMachineClass/VirtualMachineImage names
+# before applying, and adjust below accordingly.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shared-services
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: scoreboard-db-cloud-init
+  namespace: shared-services
+stringData:
+  user-data: |
+    #cloud-config
+    package_update: true
+    packages:
+      - postgresql
+    write_files:
+      - path: /tmp/schema.sql
+        content: |
+          CREATE TABLE IF NOT EXISTS scores (
+            id SERIAL PRIMARY KEY,
+            player TEXT NOT NULL,
+            score INTEGER NOT NULL CHECK (score >= 0),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+          );
+          CREATE INDEX IF NOT EXISTS scores_player_idx ON scores (player);
+    runcmd:
+      - sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf
+      - echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/*/main/pg_hba.conf
+      - systemctl restart postgresql
+      - sudo -u postgres psql -c "CREATE USER workshop WITH PASSWORD 'CHANGE_ME';"
+      - sudo -u postgres psql -c "CREATE DATABASE scoreboard OWNER workshop;"
+      - sudo -u postgres psql -d scoreboard -f /tmp/schema.sql
+---
+apiVersion: vmoperator.vmware.com/v1alpha2
+kind: VirtualMachine
+metadata:
+  name: scoreboard-db
+  namespace: shared-services
+  labels:
+    app: scoreboard-db
+spec:
+  className: best-effort-small       # TODO: match a VirtualMachineClass available in your Supervisor
+  imageName: ubuntu-22-04-vmservice   # TODO: match a VirtualMachineImage in your content library
+  storageClass: wcp-storage-policy    # TODO: match your Supervisor's storage policy name
+  powerState: PoweredOn
+  bootstrap:
+    cloudInit:
+      rawCloudConfig:
+        name: scoreboard-db-cloud-init
+        key: user-data
+  network:
+    interfaces:
+      - name: eth0
+---
+apiVersion: vmoperator.vmware.com/v1alpha2
+kind: VirtualMachineService
+metadata:
+  name: scoreboard-db-lb
+  namespace: shared-services
+spec:
+  type: LoadBalancer
+  selector:
+    app: scoreboard-db
+  ports:
+    - name: postgres
+      port: 5432
+      protocol: TCP
+      targetPort: 5432

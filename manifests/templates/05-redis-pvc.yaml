@@ -1,0 +1,13 @@
+# Exercise 5 — request durable storage from the vSphere CSI driver.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: <player>   # TODO
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: <TODO-ask-facilitator-for-your-Supervisor-storage-class>
+  resources:
+    requests:
+      storage: 1Gi

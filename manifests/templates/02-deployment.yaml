@@ -1,0 +1,41 @@
+# Exercise 2 — first deploy.
+# Fill in every TODO. Everything else is left as-is on purpose.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-core
+  namespace: <player>          # TODO: your Supervisor Namespace
+  labels:
+    app: snake-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snake-core
+  template:
+    metadata:
+      labels:
+        app: snake-core        # must match spec.selector.matchLabels above
+    spec:
+      containers:
+        - name: snake-core
+          image: <registry>/snake-core:1.0   # TODO: your image
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: <TODO-e.g.-50m>
+              memory: <TODO-e.g.-64Mi>
+            limits:
+              cpu: <TODO-e.g.-200m>
+              memory: <TODO-e.g.-128Mi>

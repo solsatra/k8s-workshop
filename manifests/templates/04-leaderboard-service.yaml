@@ -1,0 +1,15 @@
+# Exercise 4 — this is what snake-core talks to. Note there's no Ingress
+# here: this Service never needs to be reachable from outside the cluster,
+# only from other pods in your namespace.
+apiVersion: v1
+kind: Service
+metadata:
+  name: leaderboard-api
+  namespace: <player>   # TODO
+spec:
+  type: ClusterIP
+  selector:
+    app: <TODO>          # TODO: match 04-leaderboard-deployment.yaml's pod labels
+  ports:
+    - port: 8080
+      targetPort: <TODO>  # TODO

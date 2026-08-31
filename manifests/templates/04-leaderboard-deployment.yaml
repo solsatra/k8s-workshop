@@ -1,0 +1,37 @@
+# Exercise 4 — this is the component you'll kill later in this same
+# exercise to prove the site survives without it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leaderboard-api
+  namespace: <player>   # TODO
+  labels:
+    app: leaderboard-api
+spec:
+  replicas: 1   # deliberately 1 — see docs/04-leaderboard-and-fault-isolation.md
+  selector:
+    matchLabels:
+      app: leaderboard-api
+  template:
+    metadata:
+      labels:
+        app: leaderboard-api
+    spec:
+      containers:
+        - name: leaderboard-api
+          image: <registry>/leaderboard-api:1.0   # TODO
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: <TODO>   # TODO: the Secret from exercise 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5

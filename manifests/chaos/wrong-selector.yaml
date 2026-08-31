@@ -1,0 +1,18 @@
+# CHAOS ROUND — answer key (facilitator only, don't show this file):
+# Bug: Service selector doesn't match the pod's labels. Symptom: pod shows
+# Running/Ready, but the site is unreachable — `kubectl get endpoints
+# snake-core` shows <none>. Fix: correct spec.selector.app back to
+# `snake-core` and re-apply.
+#
+# Applied over the player's existing snake-core Service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake-core
+spec:
+  type: ClusterIP
+  selector:
+    app: snake-core-typo
+  ports:
+    - port: 80
+      targetPort: 8080

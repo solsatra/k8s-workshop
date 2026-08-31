@@ -1,0 +1,22 @@
+# Exercise 8 — scale snake-core under load. Requires spec.resources.requests.cpu
+# to already be set on the snake-core Deployment (exercise 2) — the HPA's
+# percentage target is relative to that request.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: snake-core
+  namespace: <player>   # TODO
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: snake-core
+  minReplicas: <TODO-e.g.-1>
+  maxReplicas: <TODO-e.g.-5>
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: <TODO-e.g.-60>

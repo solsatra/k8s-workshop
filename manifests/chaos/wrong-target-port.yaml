@@ -1,0 +1,20 @@
+# CHAOS ROUND — answer key (facilitator only, don't show this file):
+# Bug: Service targetPort doesn't match the container's actual listening
+# port. Symptom: pod Running/Ready, `kubectl get endpoints` shows an IP —
+# but requests through the Service hang or connection-refuse, because
+# nothing listens on 9999 inside the container. This is the trickiest one:
+# it looks healthy everywhere except when you actually try to load the
+# page. Fix: correct targetPort back to 8080 and re-apply.
+#
+# Applied over the player's existing snake-core Service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake-core
+spec:
+  type: ClusterIP
+  selector:
+    app: snake-core
+  ports:
+    - port: 80
+      targetPort: 9999

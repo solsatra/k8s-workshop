@@ -1,0 +1,56 @@
+body {
+  background: #0b1220;
+  color: #e2e8f0;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+main {
+  max-width: 640px;
+  width: 100%;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+canvas {
+  border: 1px solid #334155;
+  border-radius: 4px;
+}
+
+#leaderboard-panel {
+  flex: 1;
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  min-width: 160px;
+}
+
+#leaderboard-panel h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  color: #94a3b8;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+  font-size: 0.9rem;
+}
+
+#status {
+  margin-top: 1rem;
+  color: #94a3b8;
+}

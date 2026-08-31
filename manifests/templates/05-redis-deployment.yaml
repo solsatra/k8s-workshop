@@ -1,0 +1,47 @@
+# Exercise 5 — Redis holds your in-progress game session (see snake-core's
+# /api/session). Whether that survives a pod restart depends entirely on
+# the volume type below.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: <player>   # TODO
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["--appendonly", "yes"]
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          # TODO: start with `emptyDir: {}`, kill the pod, see the session
+          # vanish — then switch to the PVC below and kill it again.
+          persistentVolumeClaim:
+            claimName: redis-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: <player>   # TODO
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
