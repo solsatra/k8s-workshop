@@ -103,7 +103,7 @@ window.addEventListener('keydown', (e) => {
 
 async function loadConfig() {
   try {
-    const res = await fetch('/api/config');
+    const res = await fetch('api/config');
     const cfg = await res.json();
     gridSize = cfg.gridSize || gridSize;
     tickMs = cfg.tickMs || tickMs;
@@ -118,7 +118,7 @@ async function loadConfig() {
 
 async function submitScore(finalScore) {
   try {
-    await fetch('/api/score', {
+    await fetch('api/score', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ score: finalScore }),
@@ -131,7 +131,7 @@ async function submitScore(finalScore) {
 
 async function refreshLeaderboard() {
   try {
-    const res = await fetch('/api/leaderboard');
+    const res = await fetch('api/leaderboard');
     const data = await res.json();
     if (!data.available) {
       leaderboardBody.textContent = 'Leaderboard unavailable right now — keep playing!';

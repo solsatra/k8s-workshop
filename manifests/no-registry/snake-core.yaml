@@ -1,0 +1,112 @@
+# snake-core without a registry: public node image, app code from ConfigMap
+# snake-core-src, deps installed by an init container at pod start.
+# Create the ConfigMap first, from apps/snake-core:
+#   kubectl -n snake create configmap snake-core-src --from-file=package.json \
+#     --from-file=server.js --from-file=public-index.html=public/index.html \
+#     --from-file=public-style.css=public/style.css --from-file=public-game.js=public/game.js
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-core
+  namespace: snake
+  labels:
+    app: snake-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snake-core
+  template:
+    metadata:
+      labels:
+        app: snake-core
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: npm-install
+          image: node:18-alpine
+          workingDir: /app
+          command: ["sh", "-c", "cp /src/package.json /src/server.js . && mkdir -p public && cp /src/public-* public/ 2>/dev/null; for f in public/public-*; do mv \"$f\" \"public/${f#public/public-}\"; done; npm install --omit=dev --no-audit --no-fund --cache /tmp/npm"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: src, mountPath: /src }
+            - { name: app, mountPath: /app }
+            - { name: tmp, mountPath: /tmp }
+      containers:
+        - name: snake-core
+          image: node:18-alpine
+          workingDir: /app
+          command: ["node", "server.js"]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: BASE_PATH, value: /snake }
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 5
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: app, mountPath: /app }
+      volumes:
+        - name: src
+          configMap:
+            name: snake-core-src
+        - name: app
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake-core
+  namespace: snake
+spec:
+  type: ClusterIP
+  selector:
+    app: snake-core
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: snake-core
+  namespace: snake
+spec:
+  ingressClassName: avi-lb
+  rules:
+    - host: nisotest.duckdns.org
+      http:
+        paths:
+          - path: /snake
+            pathType: Prefix
+            backend:
+              service:
+                name: snake-core
+                port:
+                  number: 80
+  # Same host as nisotest: without this block AKO's EVH child for the host
+  # lost its certificate and served the Avi default cert.
+  tls:
+    - hosts:
+        - nisotest.duckdns.org
+      secretName: snake-tls

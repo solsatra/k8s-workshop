@@ -13,6 +13,8 @@ const LEADERBOARD_API_URL = process.env.LEADERBOARD_API_URL || '';
 const REDIS_HOST = process.env.REDIS_HOST || '';
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379', 10);
 const BACKEND_TIMEOUT_MS = 1500;
+// Optional URL prefix, e.g. /snake when sharing a host behind an Ingress path.
+const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/+$/, '');
 
 const app = express();
 app.use(express.json());
@@ -114,6 +116,15 @@ app.post('/api/session', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Mount under BASE_PATH. /healthz stays at the root for probes, and the bare
+// prefix redirects to its trailing-slash form so relative asset URLs resolve.
+const root = express();
+root.get('/healthz', (_req, res) => res.status(200).send('ok'));
+if (BASE_PATH) {
+  root.use((req, res, next) => (req.path === BASE_PATH ? res.redirect(301, `${BASE_PATH}/`) : next()));
+}
+root.use(BASE_PATH || '/', app);
+
+root.listen(PORT, () => {
   console.log(`snake-core listening on :${PORT} (player=${PLAYER_NAME})`);
 });
